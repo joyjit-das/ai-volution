@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Document Summarizer & News</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --gradient-1: linear-gradient(135deg, #FF6B6B, #FFE66D);
+            --gradient-2: linear-gradient(135deg, #4ECDC4, #556270);
+            --primary: #FF6B6B;
+            --secondary: #4ECDC4;
+            --accent-1: #FFE66D;
+            --accent-2: #556270;
+            --accent-3: #7209B7;
+            --background: #F7F7F7;
+            --text: #2C3E50;
+            --card-bg: #ffffff;
+            --border: #E0E0E0;
+        }
+
+        [data-theme="dark"] {
+            --gradient-1: linear-gradient(135deg, #FF6B6B, #7209B7);
+            --gradient-2: linear-gradient(135deg, #4ECDC4, #2C3E50);
+            --primary: #FF6B6B;
+            --secondary: #4ECDC4;
+            --accent-1: #7209B7;
+            --accent-2: #2C3E50;
+            --accent-3: #FFE66D;
+            --background: #1A1A1A;
+            --text: #F7F7F7;
+            --card-bg: #2D2D2D;
+            --border: #404040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 107, 107, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(78, 205, 196, 0.1) 0%, transparent 20%);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding: 1rem 2rem;
+            background: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .theme-toggle {
+            background: var(--gradient-2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 1rem;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .section {
+            background-color: var(--card-bg);
+            border-radius: 2rem;
+            padding: 2rem;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--gradient-1);
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            color: var(--accent-3);
+        }
+
+        .upload-area {
+            border: 3px dashed var(--border);
+            border-radius: 2rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(45deg, 
+                rgba(255, 107, 107, 0.05) 0%, 
+                rgba(78, 205, 196, 0.05) 100%
+            );
+        }
+
+        .upload-area:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .upload-area i {
+            font-size: 4rem;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(45deg, 
+                rgba(255, 107, 107, 0.05) 0%, 
+                rgba(78, 205, 196, 0.05) 100%
+            );
+            border-radius: 1rem;
+            border-left: 4px solid var(--primary);
+            display: none;
+        }
+
+        .news-categories {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding: 0.5rem;
+            scrollbar-width: none;
+        }
+
+        .news-categories::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-btn {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+            padding: 0.8rem 1.5rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-btn.active {
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .news-card {
+            background: var(--card-bg);
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+
+        .news-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        .news-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .news-card-content {
+            padding: 1.5rem;
+        }
+
+        .news-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-3);
+            line-height: 1.4;
+        }
+
+        .news-card p {
+            font-size: 0.95rem;
+            color: var(--text);
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient-shift 5s ease infinite;
+        }
+
+        .section:hover::before {
+            opacity: 0.8;
+            transform: scaleX(1.02);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Smart Document Summarizer & News</h1>
+            <button class="theme-toggle animate-gradient" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <main class="main-content">
+            <section class="section">
+                <h2>Document Summarizer</h2>
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>Drop your document here</h3>
+                    <p>Supports PDF, DOCX, and TXT files</p>
+                    <input type="file" id="fileInput" hidden accept=".pdf,.docx,.txt">
+                </div>
+                <div id="summaryResult" class="summary-result">
+                    <h3>Summary</h3>
+                    <p id="summaryText"></p>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>News Feed</h2>
+                <div class="news-categories">
+                    <button class="category-btn active animate-gradient">Politics</button>
+                    <button class="category-btn">Technology</button>
+                    <button class="category-btn">Business</button>
+                    <button class="category-btn">Science</button>
+                    <button class="category-btn">Health</button>
+                    <button class="category-btn">Sports</button>
+                </div>
+                <div class="news-grid" id="newsGrid">
+                    <!-- News cards will be inserted here dynamically -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = document.body.dataset.theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // File upload handling
+        const fileInput = document.getElementById('fileInput');
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                const summaryResult = document.getElementById('summaryResult');
+                const summaryText = document.getElementById('summaryText');
+                summaryResult.style.display = 'block';
+                summaryText.textContent = data.summary;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        // News category handling
+        const categoryButtons = document.querySelectorAll('.category-btn');
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', async () => {
+                categoryButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                try {
+                    const response = await fetch(`/news?category=${button.textContent.toLowerCase()}`);
+                    const articles = await response.json();
+                    updateNewsGrid(articles);
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+        });
+
+        function updateNewsGrid(articles) {
+            const newsGrid = document.getElementById('newsGrid');
+            newsGrid.innerHTML = articles.map(article => `
+                <div class="news-card">
+                    <img src="${article.urlToImage || '/api/placeholder/400/320'}" alt="${article.title}">
+                    <div class="news-card-content">
+                        <h3>${article.title}</h3>
+                        <p>${article.description}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initial news load
+        document.querySelector('.category-btn.active').click();
+    </script>
+</body>
+</html>
